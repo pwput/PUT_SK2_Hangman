@@ -15,11 +15,12 @@ using namespace std;
 class Room {
 private:
     RoomStates roomState;
-    vector<Player> players_list;
     string getRandomName();
     string getNewRandomName();
     bool isNameTaken(string name);
 public:
+    vector<Player> players_list;
+    void erasePlayer(int clientFd);
     bool startGame();
     string addPlayer(Player player);
     RoomStates getRoomState();

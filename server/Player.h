@@ -13,6 +13,7 @@ public:
     Player();
 
     Player(int clientFd);
+    string playerToString();
 
 public:
     int clientFd;

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Room.h"
 
 RoomStates Room::getRoomState() {
@@ -47,4 +48,9 @@ bool Room::isNameTaken(string name) {
         if (p.nick == name)
             return true;
     return false;
+}
+
+void Room::erasePlayer(int clientFd) {
+    this->players_list.erase(std::remove_if(this->players_list.begin(), this->players_list.end(),
+                                           [clientFd](Player const &p) { return p.clientFd == clientFd; }), this->players_list.end());
 }

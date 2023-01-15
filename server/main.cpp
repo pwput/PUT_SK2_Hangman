@@ -30,27 +30,36 @@
 #include <algorithm>
 
 
+Room room;
 int serverSock;
-// client sockets
 std::mutex clientFdsLock;
-std::vector<Player> players;
-
 std::unordered_set<int> helpClientFds;
 
 
 void checkPort(char *p) {
     char *ptr;
     auto port = strtol(p, &ptr, 10);
-    if (*ptr != 0 || port < 1024 || port > 65535)
+    if (*ptr != 0 || port < 1024 || port > 65535) {
         fprintf(stderr, "Not valiable port number: %s.\n"
                         "Use number between 1024 and 65535\n", p);
-    exit(0);
+        exit(0);
+    }
+
+}
+
+
+void checkArgument(int argc, char **argv) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage:\n%s <port>\n", argv[0]);
+        exit(0);
+    }
+    checkPort(argv[1]);
 }
 
 
 void ctrl_c(int) {
     std::unique_lock<std::mutex> lock(clientFdsLock);
-    for (auto p: players) {
+    for (auto p: room.players_list) {
         shutdown(p.clientFd, SHUT_RDWR);
         close(p.clientFd);
     }
@@ -63,7 +72,7 @@ void ctrl_c(int) {
 void sendToAllBut(int fd, char *buffer, int count) {
     int res;
     std::unique_lock<std::mutex> lock(clientFdsLock);
-    for (auto p: players) {
+    for (auto p: room.players_list) {
         if (p.clientFd == fd) continue;
         res = send(p.clientFd, buffer, count, MSG_DONTWAIT);
         if (res != count)
@@ -71,8 +80,7 @@ void sendToAllBut(int fd, char *buffer, int count) {
     }
     for (int clientFd: helpClientFds) {
         printf("removing %d\n", clientFd);
-        players.erase(std::remove_if(players.begin(), players.end(),
-                      [clientFd](Player const &p) { return p.clientFd == clientFd; }), players.end());
+        room.erasePlayer(clientFd);
         close(clientFd);
     }
 }
@@ -114,7 +122,7 @@ void createClients(int *clientFd) {
     {
         std::unique_lock<std::mutex> lock(clientFdsLock);
         Player tmp = Player(*clientFd);
-        players.push_back(tmp);
+        room.addPlayer(tmp);
     }
 
     // tell who has connected
@@ -123,38 +131,33 @@ void createClients(int *clientFd) {
 
 }
 
-    void clientLoop(int clientFd){
-        char buffer[255];
+void clientLoop(int clientFd) {
+    char buffer[255];
 
-        while (true) {
-            // read a message
-            int count = read(clientFd, buffer, 255);
+    while (true) {
+        // read a message
+        int count = read(clientFd, buffer, 255);
 
-            if (count < 1) {
-                printf("removing %d\n", clientFd);
-                {
-                    std::unique_lock<std::mutex> lock(clientFdsLock);
-                    players.erase(std::remove_if(players.begin(), players.end(),
-                                                 [clientFd](Player const &p) { return p.clientFd == clientFd; }), players.end());
-                    close(clientFd);
-                }
-                shutdown(clientFd, SHUT_RDWR);
+        if (count < 1) {
+            printf("removing %d\n", clientFd);
+            {
+                std::unique_lock<std::mutex> lock(clientFdsLock);
+                room.erasePlayer(clientFd);
                 close(clientFd);
-                break;
-            } else {
-                // broadcast the message
-                sendToAllBut(clientFd, buffer, count);
             }
+            shutdown(clientFd, SHUT_RDWR);
+            close(clientFd);
+            break;
+        } else {
+            // broadcast the message
+            sendToAllBut(clientFd, buffer, count);
         }
+    }
 }
 
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage:\n%s <port>\n", argv[0]);
-        return 1;
-    }
-    players.clear();
+    checkArgument(argc, argv);
 
     createServer(argv[1]);
     while (true) {
