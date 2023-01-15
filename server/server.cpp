@@ -113,7 +113,7 @@ void createClients(int *clientFd) {
     // add client to all clients set
     {
         std::unique_lock<std::mutex> lock(clientFdsLock);
-        Player tmp {*clientFd};
+        Player tmp = Player(*clientFd);
         players.push_back(tmp);
     }
 
