@@ -10,6 +10,12 @@ using namespace std;
 
 class Player {
 public:
+    Player();
+
+    Player(int clientFd);
+
+public:
+    int clientFd;
     string nick;
     time_t joinTime;
     int score;
