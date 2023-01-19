@@ -9,9 +9,12 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <thread>
-#include <thread>
 #include <iostream>
 #include <functional>
+#include "Message.h"
+
+void logMessage(int clientFd, string prefix, int value);
+void logMessage(int clientFd,Message m);
 
 Server::Server(int port) : port(port) {}
 
@@ -54,7 +57,7 @@ void Server::prepareClientSock() {
     {
         std::unique_lock<std::mutex> lock(clientFdsLock);
         Player tmp = Player(this->clientFd);
-        this->room.addPlayer(tmp);
+        this->addPlayer(tmp);
     }
     // tell who has connected
     printf("new connection from: %s:%hu (fd: %d)\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port),
@@ -64,7 +67,7 @@ void Server::prepareClientSock() {
 
 void Server::shoutDown() {
     std::unique_lock<std::mutex> lock(clientFdsLock);
-    for (auto p: room.players_list) {
+    for (auto p: players_list) {
         shutdown(p.clientFd, SHUT_RDWR);
         close(p.clientFd);
     }
@@ -74,33 +77,58 @@ void Server::shoutDown() {
 }
 
 void Server::runPlayerLoop() {
-    char buffer[255];
+    char buf[256], *eol;
+    int pos{0};
+
 
     while (true) {
-        // read a message
-        int count = read(clientFd, buffer, 255);
-
-        if (count < 1) {
-            printf("removing %d\n", clientFd);
-            {
-                std::unique_lock<std::mutex> lock(clientFdsLock);
-                room.erasePlayer(clientFd);
-                close(clientFd);
-            }
-            shutdown(clientFd, SHUT_RDWR);
-            close(clientFd);
+        // dane z sieci zapisz do bufora, zaczynając od miejsca za wcześniej zapisanymi danymi
+        int bytesRead = read(clientFd, buf+pos, 255-pos);
+        if (bytesRead <= 0)
             break;
-        } else {
-            // broadcast the message
-            sendToAllBut(clientFd, buffer, count);
+        // zaktualizuj ile łącznie danych jest w buforze
+        pos+=bytesRead;
+        // zapisz znak '\0' na końcu danych
+        buf[pos] = 0;
+
+
+        // dopóki w danych jest znak nowej linii
+        while(nullptr != (eol = strchr(buf, '\n'))){
+
+            sendTo(clientFd,buf,bytesRead);
+
+            // przeczytaj komendę
+
+            char cmd[256] {};
+            int value {-1};
+            sscanf(buf, "%s%d", cmd,&value);
+
+            // usuń komendę z bufora
+
+            // (pomocnicze) wylicz długość komendy
+            int cmdLen = (eol-buf)+1;
+            // przesuń pozostałe dane i znak '\0' na początek bufora
+            memmove(buf, eol+1, pos-cmdLen+1);
+            // zaktualizuj zmienną pamiętającą ile danych jest w buforze
+            pos -= cmdLen;
+
+            Message receved =  Message{string(cmd),to_string(value)};
+
+
+            logMessage(clientFd,receved);
+
         }
+        // jeżeli w 255 znakach nie ma '\n', wyjdź.
+        if(pos == 255)
+            break;
+
     }
 }
 
 void Server::sendToAllBut(int fd, char *buffer, int count) {
     int res;
     std::unique_lock<std::mutex> lock(clientFdsLock);
-    for (auto p: room.players_list) {
+    for (auto p: players_list) {
         if (p.clientFd == fd) continue;
         res = send(p.clientFd, buffer, count, MSG_DONTWAIT);
         if (res != count)
@@ -108,7 +136,7 @@ void Server::sendToAllBut(int fd, char *buffer, int count) {
     }
     for (int clientFd: helpClientFds) {
         printf("removing %d\n", clientFd);
-        room.erasePlayer(clientFd);
+        erasePlayer(clientFd);
         close(clientFd);
     }
 }
@@ -126,4 +154,63 @@ void Server::runServerLoop() {
     }
 }
 
+void Server::sendTo(int fd, char *buffer, int count) {
+    int res;
+    std::unique_lock<std::mutex> lock(clientFdsLock);
+    for (auto p: players_list) {
+        if (p.clientFd != fd) continue;
+        res = send(p.clientFd, buffer, count, MSG_DONTWAIT);
+        if (res != count)
+            helpClientFds.insert(p.clientFd);
+    }
+    for (int clientFd: helpClientFds) {
+        printf("removing %d\n", clientFd);
+        erasePlayer(clientFd);
+        close(clientFd);
+    }
+}
+
+void Server::sendTo(int fd, Message m) {
+
+}
+
+void Server::processMessage(int playerFd, Message m) {
+
+}
+
+void logMessage(int fd, Message m){
+    cout<<"From :"<<fd<<", Prefix :"<<m.command<<", Value :"<<m.content<<endl;
+}
+
+void logMessage(int clientFd, string prefix, int value){
+    cout<<"From :"<<clientFd<<", Prefix :"<<prefix<<", Value :"<<value<<endl;
+}
+
+ServerState Server::getRoomState() {
+    return roomState;
+}
+
+bool Server::isEnoughPlayers() {
+    if (this->players_list.size() == GAME_MIN_SIZE)
+        return true;
+    else
+        return false;
+}
+
+string Server::addPlayer(Player player) {
+    players_list.push_back(player);
+    return player.nick;
+}
+
+bool Server::startGame(int playerFd) {
+    if (!this->isEnoughPlayers())
+        return false;
+    else return true;
+}
+
+
+void Server::erasePlayer(int clientFd) {
+    this->players_list.erase(std::remove_if(this->players_list.begin(), this->players_list.end(),
+                                            [clientFd](Player const &p) { return p.clientFd == clientFd; }), this->players_list.end());
+}
 

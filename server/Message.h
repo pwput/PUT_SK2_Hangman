@@ -12,10 +12,14 @@ using namespace std;
 
 class Message {
 public:
+    Message(string command, string content){
+        this->content = content;
+        this->command = command;
+    }
     string command;
     string content;
-    string messageToString(){
-        return "";
+    string toString(){
+        return command + MESSAGE_SEPARATOR +content + MESSAGE_END;
     }
 };
 
