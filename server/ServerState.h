@@ -2,7 +2,7 @@
 #define SERVER_SERVERSTATE_H
 
 enum ServerState{
-    WaitingForPlayers,
+    WaitingForPlayers = 0,
     GameInProgress
 };
 

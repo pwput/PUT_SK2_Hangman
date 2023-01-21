@@ -1,8 +1,0 @@
-//
-// Created by AORUS on 14.01.2023.
-//
-
-#ifndef SERVER_PLAYER_STATES_H
-#define SERVER_PLAYER_STATES_H
-
-#endif //SERVER_PLAYER_STATES_H

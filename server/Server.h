@@ -11,33 +11,32 @@
 
 class Server {
 public:
-    explicit Server(int port);
     explicit Server(char * port);
 
 public:
     int port;
     int serverSock{};
-    int clientFd{};
     std::mutex clientFdsLock;
+    std::mutex serverLock;
     std::unordered_set<int> helpClientFds;
     void runServerLoop();
 
 private:
-    ServerState roomState;
+    string word;
+    ServerState state;
     vector<Player> players_list;
     void erasePlayer(int clientFd);
     bool startGame(int playerFd);
     string addPlayer(Player player);
-    ServerState getRoomState();
+    bool isMessageValid(Message m);
     bool isEnoughPlayers();
-    void sendToAllBut(int fd, char *buffer, int count);
-    void sendTo(int fd, char *buffer, int count);
     void sendTo(int fd, Message m);
-    void processMessage(int playerFd, Message m);
+    bool processMessage(int playerFd, Message m);
     void shoutDown();
     void prepareServerSock();
-    void prepareClientSock();
-    void runPlayerLoop();
+    int prepareClientSock(int clinetFd);
+    void runPlayerLoop(int clinetFd);
+    void sendToAll(Message m);
 };
 
 

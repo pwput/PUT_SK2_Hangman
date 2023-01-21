@@ -5,17 +5,27 @@
 #define QUEUE_SIZE 4
 #define GAME_MIN_SIZE 3
 
-//message
 #define MESSAGE_SEPARATOR " "
 #define MESSAGE_END "\n"
 #define MESSAGE_MAX_LENGTH 258
 
-
-#define    CREATE_USER  CU
-#define     START_GAME  SG
-#define     END_GAME EG
-#define     SEND_LETTER SL
+#define stringify( name ) #name
 
 
-#define RESOLUT_SUCCESS "0"
-#define RESOLUT_FAILURE "1"
+enum Commands{
+    START_GAME = 0,
+    END_GAME,
+    SEND_LETTER,
+    COMMANDS_LAST_ITEM
+};
+
+static const char* Commands[] = {
+        stringify(START_GAME),
+        stringify(END_GAME),
+        stringify(SEND_LETTER)
+};
+
+
+
+#define RESOLUT_SUCCESS 0
+#define RESOLUT_FAILURE 1

@@ -9,7 +9,7 @@
 
 using namespace std;
 
-string get_random_word(){
+static string get_random_word(){
    ifstream dataBase;
    vector <string> words;
    srand((unsigned )time(NULL));

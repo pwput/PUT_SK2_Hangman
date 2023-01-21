@@ -12,14 +12,14 @@ class Player {
 public:
     Player();
 
-    Player(int clientFd);
+    explicit Player(int playerFd);
+    Player(int playerFd, time_t joinTime);
     string playerToString();
 
 public:
-    int clientFd;
-    string nick;
+    int playerFd;
     time_t joinTime;
-    int score;
+    int score = 0;
     int lives = PLAYER_LIFES;
 };
 

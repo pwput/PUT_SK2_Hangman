@@ -10,6 +10,9 @@
 
 using namespace std;
 
+
+
+
 class Message {
 public:
     Message(string command, string content){
@@ -19,9 +22,12 @@ public:
     string command;
     string content;
     string toString(){
-        return command + MESSAGE_SEPARATOR +content + MESSAGE_END;
+        return "Message:" + command + MESSAGE_SEPARATOR +content + MESSAGE_END;
     }
 };
+
+
+//message
 
 
 #endif //SERVER_MESSAGE_H

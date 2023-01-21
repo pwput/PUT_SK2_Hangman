@@ -1,32 +1,8 @@
 #include "database_reader.h"
-#include "server_config.h"
-#include <cstring>
-#include <iostream>
-#include "Player.h"
 #include "Server.h"
 
-#include <unistd.h>
-#include <sys/socket.h>
 #include <cstdlib>
 #include <cstdio>
-#include <cstring>
-#include <netdb.h>
-#include <thread>
-#include <mutex>
-#include <unordered_set>
-#include <csignal>
-#include <cerrno>
-#include <error.h>
-#include <cstdlib>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <error.h>
-#include <netdb.h>
-#include <thread>
-#include <mutex>
-#include <unordered_set>
 #include <algorithm>
 
 
