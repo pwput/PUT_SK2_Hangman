@@ -3,7 +3,12 @@
 #define PORT_NUMBER 8081
 #define BUFFER_SIZE 1024
 #define QUEUE_SIZE 4
-#define GAME_MIN_SIZE 3
+#define GAME_MIN_SIZE 2
+
+#define PLAYER_LIFES 2
+
+
+#define REWARD 10
 
 #define MESSAGE_SEPARATOR " "
 #define MESSAGE_END "\n"
@@ -16,13 +21,15 @@ enum Commands{
     START_GAME = 0,
     END_GAME,
     SEND_LETTER,
+    SCOREBOARD,
     COMMANDS_LAST_ITEM
 };
 
 static const char* Commands[] = {
         stringify(START_GAME),
         stringify(END_GAME),
-        stringify(SEND_LETTER)
+        stringify(SEND_LETTER),
+        stringify(SCOREBOARD)
 };
 
 

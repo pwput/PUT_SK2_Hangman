@@ -3,8 +3,9 @@
 
 #include <string>
 #include <chrono>
+#include "PlayerState.h"
+#include "server_config.h"
 
-#define PLAYER_LIFES 10
 
 using namespace std;
 
@@ -20,7 +21,34 @@ public:
     int playerFd;
     time_t joinTime;
     int score = 0;
-    int lives = PLAYER_LIFES;
+    int lives;
+    PlayerState state;
+
+    void reward();
+
+    void punch();
+
+    void setPlayerFd(int playerFd);
+
+    void setJoinTime(time_t joinTime);
+
+    void setScore(int score);
+
+    void setLives(int lives);
+
+    void setState(PlayerState state);
+
+    int getPlayerFd() const;
+
+    time_t getJoinTime() const;
+
+    int getScore() const;
+
+    int getLives() const;
+
+    PlayerState getState() const;
+
+
 };
 
 
