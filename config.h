@@ -3,7 +3,7 @@
 #define PORT_NUMBER 8081
 #define BUFFER_SIZE 1024
 #define QUEUE_SIZE 4
-#define GAME_MIN_SIZE 2
+#define GAME_MIN_SIZE 1
 
 #define PLAYER_LIFES 2
 

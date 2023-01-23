@@ -5,7 +5,7 @@
 #include <mutex>
 #include <unordered_set>
 #include <vector>
-#include "Message.h"
+#include "../Message.h"
 #include "ServerState.h"
 #include "Player.h"
 

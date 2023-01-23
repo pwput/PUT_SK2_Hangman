@@ -11,7 +11,7 @@
 #include <thread>
 #include <iostream>
 #include <functional>
-#include "Message.h"
+#include "../Message.h"
 #include "database_reader.h"
 
 void logMessage(int clientFd, Message m);
@@ -80,7 +80,6 @@ void Server::runPlayerLoop(int clientFd) {
     char buf[256], *eol;
     int pos{0};
 
-
     while (true) {
         // dane z sieci zapisz do bufora, zaczynając od miejsca za wcześniej zapisanymi danymi
         int bytesRead = read(clientFd, buf + pos, 255 - pos);
@@ -111,7 +110,7 @@ void Server::runPlayerLoop(int clientFd) {
 
             Message receved = Message{string(cmd), to_string(value)};
 
-            sendTo(clientFd, receved);
+           // sendTo(clientFd, receved);
 
             logMessage(clientFd, receved);
             processMessage(clientFd, receved);
@@ -151,6 +150,7 @@ void Server::runServerLoop() {
     prepareServerSock();
     while (true) {
         int clientFd = prepareClientSock(clientFd);
+        sendTo(clientFd,Message(Commands[SCOREBOARD],getScoreBoard()));
         std::thread([this, clientFd] { runPlayerLoop(clientFd); }).detach();
     }
 }
@@ -176,8 +176,12 @@ void Server::sendTo(int fd, Message m) {
 bool Server::processMessage(int playerFd, Message m) {
     if (!isMessageValid(m))
         return false;
-    if (m.command == Commands[START_GAME])
-        return startGame(playerFd);
+    if (m.command == Commands[START_GAME]){
+        bool started = startGame(playerFd);
+        if (!started)
+            sendTo(playerFd,Message(Commands[START_GAME],to_string(RESOLUT_FAILURE)));
+        return started;
+    }
     if (m.command == Commands[SEND_LETTER])
         return guessLetter(playerFd, m);
 
@@ -225,7 +229,7 @@ bool Server::startGame(int playerFd) {
     this->word = get_random_word();
     cout << "New word:" << this->word << endl;
 
-    sendToAll(Message(Commands[START_GAME], to_string(this->word.length())));
+    sendToAll(Message(Commands[START_GAME], to_string(RESOLUT_SUCCESS)));
     sendToAll(Message(Commands[SCOREBOARD], getScoreBoard()));
 
     cout << "New GAME starting" << endl;

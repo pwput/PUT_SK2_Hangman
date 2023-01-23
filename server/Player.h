@@ -4,7 +4,7 @@
 #include <string>
 #include <chrono>
 #include "PlayerState.h"
-#include "server_config.h"
+#include "../config.h"
 
 
 using namespace std;
@@ -22,6 +22,7 @@ public:
     time_t joinTime;
     int score = 0;
     int lives;
+    string word;
     PlayerState state;
 
     void reward();

@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>455</width>
-    <height>351</height>
+    <width>901</width>
+    <height>471</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Simple TCP client</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <widget class="QGroupBox" name="connectGroup">
      <property name="title">
@@ -54,68 +54,91 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="talkGroup">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="title">
-      <string/>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="4" column="0">
-       <widget class="QLineEdit" name="msgLineEdit"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QTextEdit" name="msgsTextEdit">
-        <property name="readOnly">
-         <bool>true</bool>
+    <widget class="QGroupBox" name="groupBox">
+     <layout class="QHBoxLayout" name="horizontalLayout_8">
+      <item>
+       <widget class="QGroupBox" name="talkGroup">
+        <property name="enabled">
+         <bool>false</bool>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>437</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="title">
+         <string/>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_10">
+         <item row="0" column="0">
+          <widget class="QLabel" name="gameLabel">
+           <property name="text">
+            <string>Game</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="guessLabel">
+           <property name="text">
+            <string>Guess</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLineEdit" name="msgLineEdit"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QTextEdit" name="gameTextEdit">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QPushButton" name="sendBtn">
+           <property name="text">
+            <string>send</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
+      <item>
+       <widget class="QGroupBox" name="roomGroup">
+        <layout class="QGridLayout" name="gridLayout_12">
+         <property name="leftMargin">
+          <number>9</number>
+         </property>
+         <property name="topMargin">
+          <number>9</number>
+         </property>
+         <property name="rightMargin">
+          <number>9</number>
+         </property>
+         <property name="bottomMargin">
+          <number>9</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="roomlabel">
+           <property name="text">
+            <string>Room</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QTextEdit" name="roomTextEdit"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QPushButton" name="startGameBtn">
+           <property name="text">
+            <string>StartGame</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="gameLabel">
-        <property name="text">
-         <string>Game</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="roomlabel">
-        <property name="text">
-         <string>Room</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QPushButton" name="sendBtn">
-        <property name="text">
-         <string>send</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="guessLabel">
-        <property name="text">
-         <string>Guess</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2">
-       <widget class="QPushButton" name="startGameBtn">
-        <property name="text">
-         <string>StartGame</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2" rowspan="4">
-       <widget class="QTextEdit" name="textEdit"/>
       </item>
      </layout>
     </widget>
@@ -127,8 +150,6 @@
   <tabstop>portSpinBox</tabstop>
   <tabstop>hostLineEdit</tabstop>
   <tabstop>conectBtn</tabstop>
-  <tabstop>msgLineEdit</tabstop>
-  <tabstop>msgsTextEdit</tabstop>
  </tabstops>
  <resources/>
  <connections/>

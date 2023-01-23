@@ -1,6 +1,6 @@
 
 #include "Player.h"
-#include "server_config.h"
+#include "../config.h"
 
 Player::Player() {}
 
@@ -20,6 +20,7 @@ Player::Player(int playerFd, time_t joinTime) {
     this->joinTime = joinTime;
     this->lives =PLAYER_LIFES;
     this->state = WaitingForGame;
+    this->word = "";
 }
 
 int Player::getPlayerFd() const {

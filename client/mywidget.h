@@ -20,6 +20,7 @@ public:
 protected:
     QTcpSocket * sock {nullptr};
     QTimer * connTimeoutTimer{nullptr};
+    void startGameBTnHit();
     void connectBtnHit();
     void socketConnected();
     void socketDisconnected();
@@ -31,6 +32,15 @@ private:
     Ui::MyWidget * ui;
 
 
+    void startGame(std::string basicString);
+
+    void setScoreBoard(std::string basicString);
+
+    void endGame(std::string basicString);
+
+    QString convertScoreBoard(std::string basicString);
+
+    void setWord(std::string basicString);
 };
 
 #endif // MYWIDGET_H

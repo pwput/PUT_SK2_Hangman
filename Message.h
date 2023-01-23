@@ -6,7 +6,7 @@
 #define SERVER_MESSAGE_H
 
 #include <string>
-#include "server_config.h"
+#include "config.h"
 
 using namespace std;
 
@@ -23,6 +23,9 @@ public:
     string content;
     string toString(){
         return "Message:" + command + MESSAGE_SEPARATOR +content + MESSAGE_END;
+    }
+    string toSend(){
+        return command + " " + content + "\n";
     }
 };
 
