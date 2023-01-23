@@ -230,8 +230,8 @@ bool Server::startGame(int playerFd) {
     cout << "New word:" << this->word << endl;
 
     for (auto &p: players_list) {
-        p.word = string('_',word.length());
-        sendTo(p.playerFd,Message(Commands))
+        p.word = string(word.length(),'?');
+        sendTo(p.playerFd,Message(Commands[SEND_LETTER],p.word));
     }
 
 

@@ -14,26 +14,26 @@ Message stringToMessage(QString string){
     if (string.contains(QString::fromStdString(Commands[START_GAME]))){
         auto mid = string.mid(std::string(Commands[START_GAME]).length());
         auto std = mid.toStdString();
-        return Message(Commands[START_GAME],std);
+        return {Commands[START_GAME],std};
     }
     if (string.contains(QString::fromStdString(Commands[SCOREBOARD]))){
         auto mid = string.mid(std::string(Commands[SCOREBOARD]).length());
         auto std = mid.toStdString();
-        return Message(Commands[SCOREBOARD],std);
+        return {Commands[SCOREBOARD],std};
     }
 
     if (string.contains(QString::fromStdString(Commands[SEND_LETTER]))) {
         auto mid = string.mid(std::string(Commands[SEND_LETTER]).length());
         auto std = mid.toStdString();
-        return Message(Commands[SEND_LETTER], std);
+        return {Commands[SEND_LETTER], std};
     }
 
     if (string.contains(QString::fromStdString(Commands[END_GAME]))){
         auto mid = string.mid(std::string(Commands[END_GAME]).length());
         auto std = mid.toStdString();
-        return Message(Commands[END_GAME],std);
+        return {Commands[END_GAME],std};
     }
-    return  Message("","");
+    return  {"",""};
 }
 
 
@@ -187,7 +187,7 @@ void MyWidget::startGame(std::string basicString) {
 
 void MyWidget::setScoreBoard(std::string basicString) {
     ui->roomTextEdit->clear();
-    ui->roomTextEdit->append("name\tlives\tscore\tstate");
+    ui->roomTextEdit->append("name\tscore\tlives\tstate");
     ui->roomTextEdit->append(convertScoreBoard(basicString));
 
 }
