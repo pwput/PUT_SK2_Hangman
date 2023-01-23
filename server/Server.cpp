@@ -229,7 +229,14 @@ bool Server::startGame(int playerFd) {
     this->word = get_random_word();
     cout << "New word:" << this->word << endl;
 
+    for (auto &p: players_list) {
+        p.word = string('_',word.length());
+        sendTo(p.playerFd,Message(Commands))
+    }
+
+
     sendToAll(Message(Commands[START_GAME], to_string(RESOLUT_SUCCESS)));
+
     sendToAll(Message(Commands[SCOREBOARD], getScoreBoard()));
 
     cout << "New GAME starting" << endl;
