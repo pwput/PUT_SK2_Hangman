@@ -10,6 +10,9 @@
 
 #define REWARD 10
 
+#define REWARD_WIN 100
+
+
 #define MESSAGE_SEPARATOR " "
 #define MESSAGE_END "\n"
 #define MESSAGE_MAX_LENGTH 258

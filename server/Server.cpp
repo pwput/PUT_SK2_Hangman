@@ -83,8 +83,17 @@ void Server::runPlayerLoop(int clientFd) {
     while (true) {
         // dane z sieci zapisz do bufora, zaczynając od miejsca za wcześniej zapisanymi danymi
         int bytesRead = read(clientFd, buf + pos, 255 - pos);
-        if (bytesRead <= 0)
-            break;
+        if (bytesRead <= 0){
+            cout<<"Removing player: "<<clientFd<<endl;
+            {
+                unique_lock<mutex> rmcl(clientFdsLock);
+                erasePlayer(clientFd);
+            }
+            shutdown(clientFd,SHUT_RDWR);
+            close(clientFd);
+            checkIfGameEnded();
+            return;
+        }
         // zaktualizuj ile łącznie danych jest w buforze
         pos += bytesRead;
         // zapisz znak '\0' na końcu danych
@@ -182,8 +191,12 @@ bool Server::processMessage(int playerFd, Message m) {
             sendTo(playerFd,Message(Commands[START_GAME],to_string(RESOLUT_FAILURE)));
         return started;
     }
-    if (m.command == Commands[SEND_LETTER])
-        return guessLetter(playerFd, m);
+    if (m.command == Commands[SEND_LETTER]){
+        bool res =  guessLetter(playerFd, m);
+        checkIfGameEnded();
+        return res;
+    }
+
 
 
     return false;
@@ -222,7 +235,6 @@ bool Server::startGame(int playerFd) {
 
     for (auto &p: players_list) {
         p.lives = PLAYER_LIFES;
-        p.score = 0;
         p.state = InGmame;
     }
 
@@ -273,35 +285,48 @@ bool Server::guessLetter(int playerFd, Message m) {
 
     cout <<"Letter: "<< letter<<endl;
 
-    string positions;
-
-    for (int i = 0; i < word.length(); ++i) {
-        if (word[i] == letter){
-            if (!positions.empty())
-                positions += ",";
-        positions += to_string(i);
-    }
-    }
-
-    if (!positions.empty())
-        positions += ";";
 
     unique_lock<std::mutex> lock2(clientFdsLock);
 
 
+
     for (auto &p: this->players_list) {
+
+        // find player
         if (p.playerFd == playerFd) {
-            if (positions.empty())
-                p.punch();
-            else
-                p.reward();
-            if (p.lives == 0) {
-                cout << "Player lost" << playerFd << endl;
-                sendLostMessage(playerFd);
+
+            // check if he already guess this letter
+            if (p.word.find(letter) != string::npos){
+                sendTo(p.playerFd,Message(Commands[SEND_LETTER],p.word));
+
+                return false;
             }
+
+
+            // if guess wrong then punch and send scoreboard
+            if (word.find(letter) == string::npos){
+                p.punch();
+                sendTo(p.playerFd,Message(Commands[SEND_LETTER],p.word));
+                sendToAll(Message(Commands[SCOREBOARD], getScoreBoard()));
+                if (p.lives == 0) {
+                    cout << "Player lost" << playerFd << endl;
+                }
+                return false;
+            }
+
+            //guess right
+            for (int i = 0; i < word.length(); ++i) {
+                if(word[i]==letter)
+                    p.word[i]=letter;
+            }
+
+            p.reward();
+            sendTo(p.playerFd,Message(Commands[SEND_LETTER],p.word));
+            sendToAll(Message(Commands[SCOREBOARD], getScoreBoard()));
+
+            return true;
         }
     }
-    sendToAll(Message(Commands[SCOREBOARD], getScoreBoard()));
 
     return false;
 }
@@ -314,8 +339,53 @@ string Server::getScoreBoard() {
     return res;
 }
 
-void Server::sendLostMessage(int playerFd) {
-    sendTo(playerFd,Message(Commands[END_GAME], to_string(RESOLUT_FAILURE)));
+void Server::sendGameEndMessage(int playerFd) {
+    sendTo(playerFd,Message(Commands[END_GAME], to_string(RESOLUT_SUCCESS)));
+}
+
+void Server::checkIfGameEnded() {
+    unique_lock<mutex> seg(serverLock);
+    unique_lock<mutex> plge(clientFdsLock);
+
+    if (state == WaitingForPlayers){
+        return;
+    }
+
+    if(players_list.empty()){
+        state == WaitingForPlayers;
+    }
+
+    //reset for players that lost
+    for (auto &p : players_list) {
+        if (p.lives == 0){
+            p.state = WaitingForGame;
+            p.lives = PLAYER_LIFES;
+            sendGameEndMessage(p.playerFd);
+        }
+    }
+
+    //restet for player that won
+    for (auto &p : players_list) {
+        if (p.word.find('?') == string::npos){
+            p.state = WaitingForGame;
+            p.lives = PLAYER_LIFES;
+            p.score += REWARD_WIN;
+            sendGameEndMessage(p.playerFd);
+        }
+    }
+
+
+    //if is someone playing then return
+    for (auto  &p:players_list){
+        if (p.state == InGmame){
+            return;
+        }
+    }
+
+    //if everyone lost
+
+    state = WaitingForPlayers;
+
 }
 
 

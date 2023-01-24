@@ -88,6 +88,7 @@ void MyWidget::socketConnected(){
     connTimeoutTimer->deleteLater();
     connTimeoutTimer=nullptr;
     ui->talkGroup->setEnabled(true);
+    ui->gameTextEdit->setEnabled(true);
 }
 
 void MyWidget::socketDisconnected(){
@@ -115,7 +116,6 @@ void MyWidget::socketReadable(){
 
     QByteArray ba = sock->readAll();
 
-    ui->gameTextEdit->clear();
     auto str = QString::fromUtf8(ba).trimmed();
 
     auto n = str.toStdString();
@@ -136,6 +136,7 @@ void MyWidget::socketReadable(){
     auto message = stringToMessage(QString::fromStdString(read));
 
     if (message.command.empty())
+        return;
 
     if (message.command == Commands[START_GAME]){
         startGame(message.content);
@@ -171,13 +172,12 @@ void MyWidget::sendBtnHit(){
 }
 
 void MyWidget::startGameBTnHit() {
-    ui->roomGroup->setEnabled(true);
     auto message = QString::fromStdString(Message(Commands[START_GAME], to_string(1)).toSend());
     sock ->write(message.toUtf8());
 }
 
 void MyWidget::startGame(std::string basicString) {
-    if (basicString.starts_with(to_string(1))){
+    if (basicString.find(to_string(RESOLUT_SUCCESS)) != string::npos){
         ui->roomGroup->setEnabled(false);
         ui->talkGroup->setEnabled(true);
     }

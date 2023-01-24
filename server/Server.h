@@ -39,7 +39,9 @@ private:
     void sendToAll(Message m);
     bool guessLetter(int playerFd, Message m);
     string getScoreBoard();
-    void sendLostMessage(int playerFd);
+    void sendGameEndMessage(int playerFd);
+
+    void checkIfGameEnded();
 };
 
 
