@@ -18,10 +18,9 @@ void logMessage(int clientFd, Message m);
 
 void Server::prepareServerSock() {
     std::string p = std::to_string(this->port);
-    // resolve addrinfo for given name
     addrinfo hints{.ai_flags=AI_PASSIVE, .ai_protocol = IPPROTO_TCP};
     addrinfo *resolved;
-    if (int err = getaddrinfo("127.0.0.1", p.c_str(), &hints, &resolved)) {
+    if (int err = getaddrinfo(SERVER_ADDR, p.c_str(), &hints, &resolved)) {
         fprintf(stderr, "Resolving address failed: %s\n", gai_strerror(err));
         exit(1);
     }
@@ -37,7 +36,7 @@ void Server::prepareServerSock() {
     if (int res = listen(serverSock, 1)) {
         fprintf(stderr, "Failed to listen %s\n", strerror(errno));
         exit(1);
-    };
+    }
 }
 
 int Server::prepareClientSock(int clientFd) {
@@ -55,11 +54,11 @@ int Server::prepareClientSock(int clientFd) {
     {
         std::unique_lock<std::mutex> lock(clientFdsLock);
         auto const now = std::chrono::system_clock::now();
-        Player tmp = Player(clientFd, chrono::system_clock::to_time_t(now));
-        this->addPlayer(tmp);
+        this->addPlayer(Player(clientFd, chrono::system_clock::to_time_t(now)));
+        sendToAllScoreboard_noLock();
     }
     // tell who has connected
-    printf("new connection from: %s:%hu (fd: %d)\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port),
+    printf("New Player from: %s:%hu (fd: %d)\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port),
            clientFd);
     return clientFd;
 
@@ -88,6 +87,7 @@ void Server::runPlayerLoop(int clientFd) {
             {
                 unique_lock<mutex> rmcl(clientFdsLock);
                 erasePlayer(clientFd);
+                sendToAllScoreboard_noLock();
             }
             shutdown(clientFd,SHUT_RDWR);
             close(clientFd);
@@ -99,7 +99,6 @@ void Server::runPlayerLoop(int clientFd) {
         // zapisz znak '\0' na końcu danych
         buf[pos] = 0;
 
-
         // dopóki w danych jest znak nowej linii
         while (nullptr != (eol = strchr(buf, '\n'))) {
 
@@ -109,8 +108,7 @@ void Server::runPlayerLoop(int clientFd) {
             sscanf(buf, "%s%d", cmd, &value);
 
             // usuń komendę z bufora
-
-            // (pomocnicze) wylicz długość komendy
+            // długość komendy
             int cmdLen = (eol - buf) + 1;
             // przesuń pozostałe dane i znak '\0' na początek bufora
             memmove(buf, eol + 1, pos - cmdLen + 1);
@@ -119,7 +117,7 @@ void Server::runPlayerLoop(int clientFd) {
 
             Message receved = Message{string(cmd), to_string(value)};
 
-           // sendTo(clientFd, receved);
+            // sendTo(clientFd, receved);
 
             logMessage(clientFd, receved);
             processMessage(clientFd, receved);
@@ -132,7 +130,7 @@ void Server::runPlayerLoop(int clientFd) {
     }
 }
 
-void Server::sendToAll(Message m) {
+void Server::sendToAll_noLock(Message m) {
     string mess = m.command + MESSAGE_SEPARATOR + m.content + MESSAGE_END;
     const char *mm = mess.c_str();
     int res;
@@ -197,8 +195,6 @@ bool Server::processMessage(int playerFd, Message m) {
         return res;
     }
 
-
-
     return false;
 }
 
@@ -247,9 +243,9 @@ bool Server::startGame(int playerFd) {
     }
 
 
-    sendToAll(Message(Commands[START_GAME], to_string(RESOLUT_SUCCESS)));
+    sendToAllStartGame_noLock();
 
-    sendToAll(Message(Commands[SCOREBOARD], getScoreBoard()));
+    sendToAllScoreboard_noLock();
 
     cout << "New GAME starting" << endl;
 
@@ -280,15 +276,11 @@ bool Server::guessLetter(int playerFd, Message m) {
     if (state != GameInProgress)
         return false;
 
-
     char letter = (char) stoi(m.content);
 
     cout <<"Letter: "<< letter<<endl;
 
-
     unique_lock<std::mutex> lock2(clientFdsLock);
-
-
 
     for (auto &p: this->players_list) {
 
@@ -298,16 +290,14 @@ bool Server::guessLetter(int playerFd, Message m) {
             // check if he already guess this letter
             if (p.word.find(letter) != string::npos){
                 sendTo(p.playerFd,Message(Commands[SEND_LETTER],p.word));
-
                 return false;
             }
-
 
             // if guess wrong then punch and send scoreboard
             if (word.find(letter) == string::npos){
                 p.punch();
                 sendTo(p.playerFd,Message(Commands[SEND_LETTER],p.word));
-                sendToAll(Message(Commands[SCOREBOARD], getScoreBoard()));
+                sendToAll_noLock(Message(Commands[SCOREBOARD], getScoreBoard()));
                 if (p.lives == 0) {
                     cout << "Player lost" << playerFd << endl;
                 }
@@ -322,8 +312,7 @@ bool Server::guessLetter(int playerFd, Message m) {
 
             p.reward();
             sendTo(p.playerFd,Message(Commands[SEND_LETTER],p.word));
-            sendToAll(Message(Commands[SCOREBOARD], getScoreBoard()));
-
+            sendToAllScoreboard_noLock();
             return true;
         }
     }
@@ -337,6 +326,14 @@ string Server::getScoreBoard() {
         res += p.playerToString() + ";";
     }
     return res;
+}
+
+void Server::sendToAllStartGame_noLock(){
+    sendToAll_noLock(Message(Commands[START_GAME], RESOLUT_SUCCESS));
+}
+
+void Server::sendToAllScoreboard_noLock(){
+    sendToAll_noLock(Message(Commands[SCOREBOARD], getScoreBoard()));
 }
 
 void Server::sendGameEndMessage(int playerFd) {

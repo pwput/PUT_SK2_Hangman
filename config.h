@@ -12,6 +12,7 @@
 
 #define REWARD_WIN 100
 
+#define SERVER_ADDR "127.0.0.1"
 
 #define MESSAGE_SEPARATOR " "
 #define MESSAGE_END "\n"

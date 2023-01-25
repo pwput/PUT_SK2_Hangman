@@ -36,12 +36,16 @@ private:
     void prepareServerSock();
     int prepareClientSock(int clinetFd);
     void runPlayerLoop(int clinetFd);
-    void sendToAll(Message m);
+    void sendToAll_noLock(Message m);
     bool guessLetter(int playerFd, Message m);
     string getScoreBoard();
     void sendGameEndMessage(int playerFd);
 
     void checkIfGameEnded();
+
+    void sendToAllScoreboard_noLock();
+
+    void sendToAllStartGame_noLock();
 };
 
 
